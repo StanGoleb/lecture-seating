@@ -1,21 +1,24 @@
-export const getSeatStatus = () => {
-  const savedStatus = JSON.parse(localStorage.getItem('seats'));
-  if (savedStatus) {
-    return savedStatus;
+// seatStatus.js
+import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
+import { db } from "./firebase";
+
+// Funkcja do ustawiania statusu miejsca
+export const setSeatStatus = async (seatId, status) => {
+  try {
+    await setDoc(doc(db, "seats", seatId), { seatId, status });
+    console.log(`Seat ${seatId} status updated to ${status}`);
+  } catch (e) {
+    console.error("Error updating document: ", e);
   }
-
-  const defaultStatus = {
-    room1: Array(150).fill('green'), // 15 rows * 10 seats
-    room2: Array(100).fill('green'), // 10 rows * 10 seats
-    room3: Array(200).fill('green'), // 20 rows * 10 seats
-    room4: Array(250).fill('green'), // 25 rows * 10 seats
-  };
-
-  return defaultStatus;
 };
 
-export const updateSeatStatus = (room, seatIndex, status) => {
-  const currentStatus = getSeatStatus();
-  currentStatus[room][seatIndex] = status;
-  localStorage.setItem('seats', JSON.stringify(currentStatus));
+// Funkcja do nasłuchiwania zmian w statusie miejsc
+export const listenToSeats = (callback) => {
+  return onSnapshot(collection(db, "seats"), (snapshot) => {
+    const seatsData = {};
+    snapshot.forEach((doc) => {
+      seatsData[doc.id] = doc.data().status;
+    });
+    callback(seatsData);
+  });
 };

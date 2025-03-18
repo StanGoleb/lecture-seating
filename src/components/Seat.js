@@ -1,37 +1,30 @@
-import React, { useState } from "react";
-import SeatPopup from "./SeatPopup";
-import "./Seat.css";
+import React, { useState, useEffect } from "react";
+import { setSeatStatus, listenToSeats } from "../seatStatus";
 
-const statusColors = {
-    working: "green",
-    meh: "yellow",
-    broken: "red",
-};
+const Seat = ({ seatId }) => {
+  const [status, setStatus] = useState("available");
 
-const Seat = ({ room, row, seat, status, updateSeatStatus }) => {
-    const [showPopup, setShowPopup] = useState(false);
+  useEffect(() => {
+    // Subskrybujemy zmiany w Firestore
+    const unsubscribe = listenToSeats((seats) => {
+      if (seats[seatId]) {
+        setStatus(seats[seatId]); // Aktualizujemy status miejsca
+      }
+    });
 
-    return (
-        <div className="seat-container">
-            <div
-                className="seat"
-                style={{ backgroundColor: statusColors[status] }}
-                onClick={() => setShowPopup(true)}
-            >
-                {seat}
-            </div>
-            {showPopup && (
-                <SeatPopup
-                    room={room}
-                    row={row}
-                    seat={seat}
-                    currentStatus={status}
-                    updateSeatStatus={updateSeatStatus}
-                    closePopup={() => setShowPopup(false)}
-                />
-            )}
-        </div>
-    );
+    return () => unsubscribe(); // Odłączamy nasłuchiwanie przy odmontowaniu
+  }, [seatId]);
+
+  const handleClick = () => {
+    const newStatus = status === "available" ? "occupied" : "available";
+    setSeatStatus(seatId, newStatus);
+  };
+
+  return (
+    <div onClick={handleClick} style={{ cursor: "pointer", padding: "10px", border: "1px solid black" }}>
+      Seat {seatId} - {status}
+    </div>
+  );
 };
 
 export default Seat;
