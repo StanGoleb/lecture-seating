@@ -28,7 +28,7 @@ function App() {
 
     return (
         <div className="app-container">
-            <h1>Wybierz miejsce</h1>
+            <h1>Krzesła Wydziału Biologii</h1>
             {Object.keys(roomLayouts).map((room) => (
                 <Room
                     key={room}
