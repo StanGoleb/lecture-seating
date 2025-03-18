@@ -1,0 +1,16 @@
+.seat-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.seat-row {
+    display: flex;
+    flex-direction: row-reverse; /* Seats count from right */
+    margin: 5px 0;
+}
+
+.row-label {
+    margin-right: 10px;
+    font-weight: bold;
+}
