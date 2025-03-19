@@ -1,18 +1,24 @@
-// seatStatus.js
-import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
-// Funkcja do ustawiania statusu miejsca
 export const setSeatStatus = async (seatId, status) => {
   try {
-    await setDoc(doc(db, "seats", seatId), { seatId, status });
-    console.log(`Seat ${seatId} status updated to ${status}`);
-  } catch (e) {
-    console.error("Error updating document: ", e);
+    await setDoc(doc(db, "seats", seatId), { status }, { merge: true }); // 🔥 Używamy merge, aby nie nadpisywać całego dokumentu
+  } catch (error) {
+    console.error("Error saving seat:", error);
   }
 };
 
-// Funkcja do nasłuchiwania zmian w statusie miejsc
+export const getInitialSeatStatus = async (seatId) => {
+  try {
+    const docSnap = await getDoc(doc(db, "seats", seatId));
+    return docSnap.exists() ? docSnap.data().status : "working";
+  } catch (error) {
+    console.error("Error fetching seat:", error);
+    return "working";
+  }
+};
+
 export const listenToSeats = (callback) => {
   return onSnapshot(collection(db, "seats"), (snapshot) => {
     const seatsData = {};
