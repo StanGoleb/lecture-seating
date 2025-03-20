@@ -30,40 +30,36 @@ function App() {
   }, []);
 
   // Update seat status (only for authenticated users)
-  const updateSeatStatus = async (room, row, seat, newStatus) => {
-    console.log(`Attempting to update seat ${room}_${row}_${seat} to ${newStatus}. User authenticated: ${!!user}`); // Debug log
-    if (!user) {
-      console.log("User is not authenticated. Cannot update seat status."); // Debug log
-      return; // Only allow updates if the user is authenticated
-    }
+const updateSeatStatus = async (room, row, seat, newStatus) => {
+  console.log(`Attempting to update seat ${room}_${row}_${seat} to ${newStatus}. User authenticated: ${!!user}`); // Debug log
+  if (!user) {
+    console.log("User is not authenticated. Cannot update seat status."); // Debug log
+    return;
+  }
 
-    const seatId = `${room}_${row}_${seat}`;
-    console.log(`Updating seat ${seatId} to ${newStatus}`); // Debug log
+  const seatId = `${room}_${row}_${seat}`;
+  console.log(`Updating seat ${seatId} to ${newStatus}`); // Debug log
 
-    try {
-      // Update Firestore
-      await setSeatStatus(seatId, newStatus);
+  try {
+    // Update Firestore
+    await setSeatStatus(seatId, newStatus);
 
-      // Merge new status into the existing state properly
-      setSeatStatus((prevStatus) => {
-        const updatedStatus = {
-          ...prevStatus,
-          [room]: {
-            ...prevStatus[room],
-            [row]: {
-              ...prevStatus[room]?.[row],
-              [seat]: newStatus, // Only update the modified seat
-            },
-          },
-        };
+    // 🔥 Ensure we preserve all previous data correctly
+    setSeatStatus((prevStatus) => {
+      const updatedStatus = { ...prevStatus };
 
-        localStorage.setItem("seatStatus", JSON.stringify(updatedStatus));
-        return updatedStatus;
-      });
-    } catch (error) {
-      console.error("Error updating seat:", error);
-    }
-  };
+      if (!updatedStatus[room]) updatedStatus[room] = {};
+      if (!updatedStatus[room][row]) updatedStatus[room][row] = {};
+
+      updatedStatus[room][row][seat] = newStatus;
+
+      localStorage.setItem("seatStatus", JSON.stringify(updatedStatus));
+      return updatedStatus;
+    });
+  } catch (error) {
+    console.error("Error updating seat:", error);
+  }
+};
 
   // Logout functionality
   const handleLogout = async () => {
