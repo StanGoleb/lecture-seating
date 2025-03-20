@@ -16,7 +16,7 @@ const SeatLayout = ({ room, layout, seatStatus, updateSeatStatus, user }) => {
               seat={seatIndex + 1}
               status={seatStatus[rowIndex + 1]?.[seatIndex + 1] || "working"}
               updateSeatStatus={updateSeatStatus}
-              user={user} // 🔥 Ensure user is passed to Seat
+              user={user} // Pass the user prop
             />
           ))}
         </div>
@@ -25,4 +25,4 @@ const SeatLayout = ({ room, layout, seatStatus, updateSeatStatus, user }) => {
   );
 };
 
-export default SeatLayout;
+export default SeatLayout; // Export as default

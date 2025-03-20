@@ -44,7 +44,7 @@ function App() {
       // Update Firestore
       await setSeatStatus(seatId, newStatus);
 
-      // Merge new status into the existing state properly
+      // Update local state
       setSeatStatus((prevStatus) => {
         const updatedStatus = {
           ...prevStatus,
@@ -52,11 +52,10 @@ function App() {
             ...prevStatus[room],
             [row]: {
               ...prevStatus[room]?.[row],
-              [seat]: newStatus, // Only update the modified seat
+              [seat]: newStatus,
             },
           },
         };
-
         localStorage.setItem("seatStatus", JSON.stringify(updatedStatus));
         return updatedStatus;
       });
