@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import Room from "./components/Room";
 import Login from "./components/Login";
 import { auth } from "./firebase";
-import { setSeatStatus } from "./seatStatus"; // Import setSeatStatus
+import { setSeatStatus as updateSeatStatusFirestore } from "./seatStatus"; // Import setSeatStatus (renamed to avoid conflict)
 import roomLayouts from "./roomLayouts";
 import "./App.css";
+import { collection, getDocs } from "firebase/firestore"; // Import Firestore functions
+import { db } from "./firebase"; // Import Firestore instance
 
 function App() {
   const [seatStatus, setSeatStatus] = useState(() => {
@@ -29,37 +31,62 @@ function App() {
     return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
+  // Sync Firestore data with state when the component loads
+  useEffect(() => {
+    const loadSeatStatus = async () => {
+      const snapshot = await getDocs(collection(db, "seats"));
+      const firebaseSeatStatus = {};
+
+      snapshot.forEach((doc) => {
+        const [room, row, seat] = doc.id.split("_");
+        if (!firebaseSeatStatus[room]) firebaseSeatStatus[room] = {};
+        if (!firebaseSeatStatus[room][row]) firebaseSeatStatus[room][row] = {};
+
+        firebaseSeatStatus[room][row][seat] = doc.data().status;
+      });
+
+      console.log("🔥 Loaded seat data from Firestore:", firebaseSeatStatus);
+      setSeatStatus(firebaseSeatStatus);
+    };
+
+    loadSeatStatus();
+  }, []);
+
   // Update seat status (only for authenticated users)
-const updateSeatStatus = async (room, row, seat, newStatus) => {
-  console.log(`Attempting to update seat ${room}_${row}_${seat} to ${newStatus}. User authenticated: ${!!user}`); // Debug log
-  if (!user) {
-    console.log("User is not authenticated. Cannot update seat status."); // Debug log
-    return;
-  }
+  const updateSeatStatus = async (room, row, seat, newStatus) => {
+    console.log(`🚀 Attempting to update seat ${room}_${row}_${seat} to ${newStatus}. User authenticated: ${!!user}`); // Debug log
+    if (!user) {
+      console.log("❌ User not authenticated. Cannot update seat."); // Debug log
+      return; // Only allow updates if the user is authenticated
+    }
 
-  const seatId = `${room}_${row}_${seat}`;
-  console.log(`Updating seat ${seatId} to ${newStatus}`); // Debug log
+    const seatId = `${room}_${row}_${seat}`;
+    console.log(`Updating seat ${seatId} to ${newStatus}`); // Debug log
 
-  try {
-    // Update Firestore
-    await setSeatStatus(seatId, newStatus);
+    try {
+      // Update Firestore
+      await updateSeatStatusFirestore(seatId, newStatus);
 
-    // 🔥 Ensure we preserve all previous data correctly
-    setSeatStatus((prevStatus) => {
-      const updatedStatus = { ...prevStatus };
+      // Merge new status into the existing state properly
+      setSeatStatus((prevStatus) => {
+        console.log("🔍 Previous state:", prevStatus); // Debug log
 
-      if (!updatedStatus[room]) updatedStatus[room] = {};
-      if (!updatedStatus[room][row]) updatedStatus[room][row] = {};
+        const updatedStatus = { ...prevStatus };
 
-      updatedStatus[room][row][seat] = newStatus;
+        if (!updatedStatus[room]) updatedStatus[room] = {};
+        if (!updatedStatus[room][row]) updatedStatus[room][row] = {};
 
-      localStorage.setItem("seatStatus", JSON.stringify(updatedStatus));
-      return updatedStatus;
-    });
-  } catch (error) {
-    console.error("Error updating seat:", error);
-  }
-};
+        updatedStatus[room][row][seat] = newStatus;
+
+        console.log("✅ Updated state:", updatedStatus); // Debug log
+
+        localStorage.setItem("seatStatus", JSON.stringify(updatedStatus));
+        return updatedStatus;
+      });
+    } catch (error) {
+      console.error("🔥 Error updating seat:", error);
+    }
+  };
 
   // Logout functionality
   const handleLogout = async () => {

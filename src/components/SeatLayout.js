@@ -2,7 +2,7 @@ import React from "react";
 import Seat from "./Seat"; // Import the Seat component
 import "./SeatLayout.css";
 
-const SeatLayout = ({ room, layout, seatStatus, updateSeatStatus, user }) => {
+const SeatLayout = ({ room, layout, seatStatus, updateSeatStatus, user, selectedSeat, setSelectedSeat }) => {
   return (
     <div className="seat-layout">
       {layout.map((seatsInRow, rowIndex) => (
@@ -16,7 +16,9 @@ const SeatLayout = ({ room, layout, seatStatus, updateSeatStatus, user }) => {
               seat={seatIndex + 1}
               status={seatStatus[rowIndex + 1]?.[seatIndex + 1] || "working"}
               updateSeatStatus={updateSeatStatus}
-              user={user} // 🔥 Ensure user is passed to Seat
+              user={user}
+              selectedSeat={selectedSeat} // Pass selectedSeat to each Seat
+              setSelectedSeat={setSelectedSeat} // Pass setSelectedSeat to each Seat
             />
           ))}
         </div>

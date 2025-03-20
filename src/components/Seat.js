@@ -8,13 +8,12 @@ const statusColors = {
   broken: "red",
 };
 
-const Seat = ({ room, row, seat, status, updateSeatStatus, user }) => {
-  const [showPopup, setShowPopup] = useState(false);
-
+const Seat = ({ room, row, seat, status, updateSeatStatus, user, selectedSeat, setSelectedSeat }) => {
   const handleClick = () => {
     console.log(`Seat ${room}_${row}_${seat} clicked. User authenticated: ${!!user}`); // Debug log
     if (user) {
-      setShowPopup(true); // Only show popup if the user is authenticated
+      // Update the selected seat
+      setSelectedSeat({ room, row, seat }); // Set the selected seat, so it triggers a new popup for the clicked seat
     } else {
       console.log("User is not authenticated. Cannot edit seat."); // Debug log
     }
@@ -29,12 +28,13 @@ const Seat = ({ room, row, seat, status, updateSeatStatus, user }) => {
       >
         {seat}
       </div>
-      {showPopup && (
+      {/* Show the popup only if this seat is the selected one */}
+      {selectedSeat && selectedSeat.room === room && selectedSeat.row === row && selectedSeat.seat === seat && (
         <SeatPopup
           seat={seat}
           currentStatus={status}
           updateSeatStatus={(newStatus) => updateSeatStatus(room, row, seat, newStatus)}
-          closePopup={() => setShowPopup(false)}
+          closePopup={() => setSelectedSeat(null)} // Close the popup when "closePopup" is clicked
         />
       )}
     </div>
