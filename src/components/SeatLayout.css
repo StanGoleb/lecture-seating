@@ -6,11 +6,18 @@
 
 .seat-row {
     display: flex;
-    flex-direction: row-reverse; /* Seats count from right */
+    flex-direction: row-reverse;
     margin: 5px 0;
 }
 
 .row-label {
     margin-right: 10px;
     font-weight: bold;
+}
+
+.seat-gap {
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    background-color: transparent; /* Keeps it invisible */
 }
